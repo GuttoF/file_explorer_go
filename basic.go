@@ -5,15 +5,18 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 func main() {
 	// First directory
-	currentDir := "."
+	currentDir, _ := os.Getwd()
 
 	for {
-		fmt.Printf("[%s] $", currentDir)
+		fmt.Printf("[%s] $ ", currentDir)
 
 		var command string
 		_, err := fmt.Scan(&command)
@@ -77,6 +80,40 @@ func main() {
 				log.Fatal(err)
 			}
 			fmt.Printf("created directory %s\n", directoryPath)
+
+		case "clear":
+			clearTerminal()
+
+		case "find":
+			var targetFileName string
+			_, err := fmt.Scan(&targetFileName)
+			if err != nil {
+				fmt.Println("error reading target file name", err)
+				continue
+			}
+			findFiles(currentDir, targetFileName)
+
+		case "exit":
+			fmt.Println("exiting...")
+			os.Exit(0)
+
+		case "touch":
+			var fileName string
+			_, err := fmt.Scan(&fileName)
+			if err != nil {
+				fmt.Println("error reading file name", err)
+				continue
+			}
+			err = createFile(currentDir, fileName)
+			if err != nil {
+				fmt.Println("error creating file", err)
+			}
+
+		case "vim":
+			err := openVimEditor()
+			if err != nil {
+				fmt.Println("error opening Vim:", err)
+			}
 
 		default:
 			fmt.Println("unknown command", command)
@@ -157,4 +194,55 @@ func createDirectory(directoryPath string) error {
 		return err
 	}
 	return nil
+}
+
+func clearTerminal() {
+	var cmd *exec.Cmd
+
+	switch runtime.GOOS {
+	case "linux":
+		cmd = exec.Command("clear") // "clear" in Linux.
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "cls") // "cls" in Windows.
+	default:
+		fmt.Println("Clearing the terminal is not supported on this operating system.")
+		return
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
+func createFile(directory, fileName string) error {
+	filePath := filepath.Join(directory, fileName)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return nil
+}
+
+func findFiles(path, targetName string) {
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.Name() == targetName || strings.Contains(info.Name(), targetName) {
+			fmt.Println(path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println("error searching for files:", err)
+	}
+}
+
+func openVimEditor() error {
+	cmd := exec.Command("vim")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
