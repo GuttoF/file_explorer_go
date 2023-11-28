@@ -46,3 +46,7 @@ func (app *CommandLineApp) createDirectory(directoryPath string) error {
 	}
 	return nil
 }
+
+func (app *CommandLineApp) printWorkingDirectory() {
+	fmt.Println(app.CurrentDir)
+}

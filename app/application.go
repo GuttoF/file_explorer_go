@@ -121,6 +121,9 @@ func (app *CommandLineApp) Run() {
 				fmt.Println("error opening Vim:", err)
 			}
 
+		case "pwd":
+			app.printWorkingDirectory()
+
 		default:
 			fmt.Println("unknown command", command)
 		}
