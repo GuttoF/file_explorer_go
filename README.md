@@ -1,3 +1,10 @@
+# How can I use it?
+ ```go
+//go: 1.21.1
+go run main.go
+```
+The tools.versions file blocks the use in golang 1.21.1, if you want to use a higher version, change it in the file.
+
 # File Explorer Using Go
 --
     import "."
